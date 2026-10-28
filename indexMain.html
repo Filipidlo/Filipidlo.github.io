@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f5f0" />
+    <title>Chess, your move</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      defer
+      src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"
+    ></script>
+  </head>
+  <body>
+    <main>
+      <section
+        class="screen welcome-screen active"
+        id="welcome-screen"
+        aria-labelledby="welcome-title"
+      >
+        <div class="welcome-content">
+          <div class="brand-mark">
+            <span aria-hidden="true">♞</span> The quiet game
+          </div>
+          <h1 id="welcome-title">Welcome to chess</h1>
+          <p>
+            A little patience, a little courage, and one good move at a time.
+          </p>
+          <div class="welcome-actions">
+            <button class="primary-button" id="start-button">
+              Play AI <span aria-hidden="true">→</span>
+            </button>
+            <button class="secondary-button" id="friend-mode-button">
+              Play friend
+            </button>
+          </div>
+          <span class="welcome-note"
+            >A thoughtful match, whenever you are ready.</span
+          >
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-menu-screen"
+        aria-labelledby="friend-menu-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-menu-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-menu-title">Play a friend</h1>
+          <p>Meet in a private room and take turns on the same board.</p>
+          <div class="friend-menu-actions">
+            <button class="primary-button" id="friend-create-menu-button">
+              Create
+            </button>
+            <button class="secondary-button" id="friend-join-menu-button">
+              Join
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-create-screen"
+        aria-labelledby="friend-create-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-create-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-create-title">Create a room</h1>
+          <p>You’ll play White. Choose the clock, then share your room code.</p>
+          <div class="field">
+            <label>Time per player</label>
+            <div
+              class="choice-row"
+              role="group"
+              aria-label="Choose friend game clock"
+            >
+              <button class="choice" data-friend-minutes="5">5 min</button>
+              <button class="choice selected" data-friend-minutes="10">
+                10 min
+              </button>
+              <button class="choice" data-friend-minutes="15">15 min</button>
+            </div>
+          </div>
+          <button class="primary-button setup-play" id="create-room-button">
+            Create room <span aria-hidden="true">→</span>
+          </button>
+          <p class="room-error" id="create-room-error" role="alert"></p>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-join-screen"
+        aria-labelledby="friend-join-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-join-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-join-title">Join a room</h1>
+          <p>Enter the four-digit code from your friend.</p>
+          <div class="field">
+            <label for="room-code-input">Room code</label>
+            <input
+              id="room-code-input"
+              class="room-code-input"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              placeholder="0000"
+            />
+          </div>
+          <button class="primary-button setup-play" id="join-room-button">
+            Join room <span aria-hidden="true">→</span>
+          </button>
+          <p class="room-error" id="join-room-error" role="alert"></p>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="setup-screen"
+        aria-labelledby="setup-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="welcome-back">← &nbsp; Back</button>
+          <h1 id="setup-title">Set the board</h1>
+          <p>Choose your opponent and settle on a clock.</p>
+          <div class="field">
+            <label>Difficulty</label>
+            <div
+              class="choice-row"
+              id="difficulty-options"
+              role="group"
+              aria-label="Choose difficulty"
+            >
+              <button class="choice" data-difficulty="easy">
+                Easy<small>Relaxed</small>
+              </button>
+              <button class="choice selected" data-difficulty="medium">
+                Medium<small>Balanced</small>
+              </button>
+              <button class="choice" data-difficulty="hard">
+                Hard<small>Sharper</small>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Your color</label>
+            <div
+              class="choice-row"
+              id="color-options"
+              role="group"
+              aria-label="Choose your color"
+            >
+              <button
+                class="choice selected"
+                data-color="white"
+                aria-pressed="true"
+              >
+                White
+              </button>
+              <button class="choice" data-color="black" aria-pressed="false">
+                Black
+              </button>
+              <button class="choice" data-color="random" aria-pressed="false">
+                Random
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Time per player</label>
+            <div
+              class="choice-row"
+              id="time-options"
+              role="group"
+              aria-label="Choose time per player"
+            >
+              <button class="choice" data-minutes="5">5 min</button>
+              <button class="choice selected" data-minutes="10">10 min</button>
+              <button class="choice" data-minutes="15">15 min</button>
+            </div>
+          </div>
+          <button class="primary-button setup-play" id="play-button">
+            Play chess <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="screen game-screen"
+        id="game-screen"
+        aria-label="Chess game"
+      >
+        <header class="game-header">
+          <div class="brand-mark">
+            <span aria-hidden="true">♞</span> The quiet game
+          </div>
+          <button class="back-button" id="new-game-header">
+            New game &nbsp; ↗
+          </button>
+        </header>
+        <div class="game-layout">
+          <div class="board-column">
+            <div class="player-bar" id="ai-player-bar">
+              <div class="player-ident">
+                <span class="player-dot dark" id="opponent-dot"></span>
+                <span id="opponent-name-top">Chess AI</span>
+              </div>
+              <span class="player-status" id="ai-status">Waiting</span>
+            </div>
+            <div
+              class="chessboard"
+              id="chessboard"
+              role="grid"
+              aria-label="Chess board"
+            ></div>
+            <div class="player-bar">
+              <div class="player-ident">
+                <span class="player-dot"></span> You
+              </div>
+              <span class="player-status" id="you-status"
+                >White · Your turn</span
+              >
+            </div>
+          </div>
+          <aside class="side-panel" aria-label="Game information">
+            <h1 class="game-title">Your match</h1>
+            <p class="game-subtitle" id="match-description">
+              Medium · 10 minutes each
+            </p>
+            <div class="timer-card" id="ai-timer-card">
+              <span class="timer-label" id="opponent-label">Chess AI</span
+              ><span class="timer-value" id="ai-timer">10:00</span>
+            </div>
+            <div class="timer-card active-turn" id="you-timer-card">
+              <span class="timer-label">You</span
+              ><span class="timer-value" id="you-timer">10:00</span>
+            </div>
+            <div class="turn-message" id="turn-message" aria-live="polite">
+              Your move. Take your time.
+            </div>
+            <div class="move-heading">Moves</div>
+            <div class="move-list" id="move-list" aria-live="polite">
+              Your game starts here.
+            </div>
+            <div class="game-actions">
+              <button class="secondary-button primary" id="restart-button">
+                Restart
+              </button>
+              <button class="secondary-button" id="resign-button">
+                Resign
+              </button>
+            </div>
+            <div class="room-share" id="room-share" hidden>
+              <span class="room-share-label">Room code</span>
+              <div class="room-share-row">
+                <strong id="room-code-display">0000</strong
+                ><button class="secondary-button" id="copy-room-code">
+                  Copy
+                </button>
+              </div>
+              <span
+                class="room-connection-status"
+                id="room-connection-status"
+                aria-live="polite"
+                >Waiting for a friend to join…</span
+              >
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div
+      class="game-over"
+      id="game-over"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="result-title"
+    >
+      <div class="result-panel">
+        <div class="result-icon" aria-hidden="true" id="result-icon">♔</div>
+        <h2 id="result-title">You win</h2>
+        <p id="result-detail">Well played.</p>
+        <button class="primary-button" id="result-new-game">Play again</button>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script defer src="script.js"></script>
+  </body>
+</html>
