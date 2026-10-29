@@ -1,1 +1,1891 @@
+# Chess Game
 
+Complete standalone page source (`indexMain.html`):
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f5f0" />
+    <title>Chess, your move</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f6f5f0;
+        --ink: #202a22;
+        --muted: #737b72;
+        --green: #355a43;
+        --green-dark: #284735;
+        --lime: #e8ef9b;
+        --yellow: #f1d64f;
+        --line: #e2e3dc;
+        --light-square: #e9e5d7;
+        --dark-square: #759276;
+        --white-piece: #fffdf5;
+        --black-piece: #26332c;
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--paper);
+      }
+      button,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .screen {
+        display: none;
+        min-height: 100vh;
+      }
+      .screen.active {
+        display: flex;
+      }
+
+      .welcome-screen {
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 32px;
+      }
+      .welcome-screen::before,
+      .welcome-screen::after {
+        position: absolute;
+        border: 1px solid #dfe1d5;
+        border-radius: 50%;
+        content: "";
+        pointer-events: none;
+      }
+      .welcome-screen::before {
+        top: -300px;
+        right: -270px;
+        width: 720px;
+        height: 720px;
+      }
+      .welcome-screen::after {
+        bottom: -240px;
+        left: -280px;
+        width: 520px;
+        height: 520px;
+      }
+      .welcome-content {
+        position: relative;
+        z-index: 1;
+        width: min(680px, 100%);
+        text-align: center;
+        animation: appear 0.7s ease both;
+      }
+      .brand-mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .brand-mark span {
+        display: grid;
+        width: 27px;
+        height: 27px;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--green);
+        color: var(--lime);
+        font-size: 17px;
+      }
+      .welcome-content h1 {
+        margin: 42px 0 14px;
+        font:
+          500 clamp(54px, 10vw, 94px)/0.98 "Fraunces",
+          Georgia,
+          serif;
+      }
+      .welcome-content p {
+        max-width: 410px;
+        margin: 0 auto 34px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.65;
+      }
+      .primary-button {
+        min-height: 54px;
+        padding: 0 27px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--yellow);
+        color: var(--ink);
+        font-weight: 700;
+        transition:
+          transform 0.18s ease,
+          background 0.18s ease;
+      }
+      .primary-button:hover {
+        transform: translateY(-2px);
+        background: #f7df65;
+      }
+      .welcome-note {
+        display: block;
+        margin-top: 21px;
+        color: #8b9188;
+        font-size: 12px;
+      }
+      .welcome-actions,
+      .friend-menu-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      .welcome-actions .primary-button,
+      .welcome-actions .secondary-button,
+      .friend-menu-actions .primary-button,
+      .friend-menu-actions .secondary-button {
+        min-width: 150px;
+      }
+      .friend-menu-actions {
+        justify-content: flex-start;
+        margin-top: 30px;
+      }
+
+      .setup-screen {
+        align-items: center;
+        justify-content: center;
+        padding: 28px 18px;
+      }
+      .setup-panel {
+        width: min(460px, 100%);
+        animation: appear 0.35s ease both;
+      }
+      .back-button {
+        padding: 8px 0;
+        border: 0;
+        background: none;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .back-button:hover {
+        color: var(--ink);
+      }
+      .setup-panel h1 {
+        margin: 25px 0 7px;
+        font:
+          500 46px/1.05 "Fraunces",
+          Georgia,
+          serif;
+      }
+      .setup-panel > p {
+        margin: 0 0 28px;
+        color: var(--muted);
+      }
+      .field {
+        margin: 0 0 22px;
+      }
+      .field label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .choice-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+      }
+      .choice {
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: #525a52;
+        font-size: 14px;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          color 0.15s;
+      }
+      .choice:hover {
+        border-color: #9baa91;
+      }
+      .choice.selected {
+        border-color: var(--green);
+        background: var(--green);
+        color: #fff;
+      }
+      .choice:focus-visible,
+      button:focus-visible {
+        outline: 3px solid #d6bd32;
+        outline-offset: 2px;
+      }
+      .choice small {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        opacity: 0.8;
+      }
+      .room-code-input {
+        width: 100%;
+        min-height: 56px;
+        padding: 8px 14px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--ink);
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-align: center;
+      }
+      .room-code-input:focus {
+        border-color: var(--green);
+        outline: 3px solid #d6bd3244;
+      }
+      .room-error {
+        min-height: 20px;
+        margin: 12px 0 0 !important;
+        color: #a83932 !important;
+        font-size: 13px;
+      }
+      .setup-play {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .game-screen {
+        flex-direction: column;
+      }
+      .game-header {
+        display: flex;
+        height: 70px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 clamp(18px, 5vw, 70px);
+        border-bottom: 1px solid var(--line);
+      }
+      .game-header .brand-mark {
+        font-size: 12px;
+      }
+      .game-header .back-button {
+        padding: 10px;
+      }
+      .game-layout {
+        display: grid;
+        width: min(1080px, 100%);
+        grid-template-columns: minmax(0, 620px) minmax(250px, 300px);
+        align-items: center;
+        gap: clamp(24px, 5vw, 68px);
+        margin: auto;
+        padding: 34px 22px 40px;
+      }
+      .board-column {
+        width: 100%;
+      }
+      .player-bar {
+        display: flex;
+        min-height: 54px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+      .player-ident {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .player-dot {
+        width: 14px;
+        height: 14px;
+        border: 1px solid #bbc1b7;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .player-dot.dark {
+        border-color: #27342c;
+        background: #27342c;
+      }
+      .player-status {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .chessboard {
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(8, 1fr);
+        aspect-ratio: 1;
+        overflow: hidden;
+        margin: 10px 0;
+        border: 5px solid #fff;
+        border-radius: 5px;
+        box-shadow: 0 7px 25px #34453214;
+      }
+      .square {
+        position: relative;
+        display: grid;
+        aspect-ratio: 1;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+      }
+      .square.light {
+        background: var(--light-square);
+      }
+      .square.dark {
+        background: var(--dark-square);
+      }
+      .square.selected {
+        box-shadow: inset 0 0 0 4px #f1d64f;
+      }
+      .square.last-move {
+        background-image: linear-gradient(#f2d94755, #f2d94755);
+      }
+      .square.legal::after {
+        position: absolute;
+        width: 24%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: #23352b5a;
+        content: "";
+      }
+      .square.legal.capture::after {
+        width: 82%;
+        border: 5px solid #23352b66;
+        background: transparent;
+      }
+      .square:focus-visible {
+        z-index: 1;
+        outline: 3px solid #f1d64f;
+        outline-offset: -3px;
+      }
+      .piece {
+        position: relative;
+        z-index: 1;
+        font-family: "DejaVu Sans", "Arial Unicode MS", sans-serif;
+        font-size: clamp(25px, 7vw, 66px);
+        line-height: 1;
+        user-select: none;
+        transition: transform 0.12s ease;
+      }
+      .square:hover .piece {
+        transform: scale(1.06);
+      }
+      .piece.white {
+        color: var(--white-piece);
+        text-shadow:
+          0 2px 2px #202a2285,
+          0 0 2px #202a2285;
+      }
+      .piece.black {
+        color: var(--black-piece);
+        text-shadow: 0 1px 1px #ffffff42;
+      }
+      .coord {
+        position: absolute;
+        z-index: 2;
+        top: 2px;
+        left: 4px;
+        font-size: clamp(8px, 1.3vw, 11px);
+        font-weight: 700;
+        pointer-events: none;
+      }
+      .file-coordinate {
+        inset: auto 4px 2px auto;
+      }
+      .light .coord {
+        color: #70816d;
+      }
+      .dark .coord {
+        color: #f2efdc;
+      }
+      .side-panel {
+        display: flex;
+        align-self: stretch;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .game-title {
+        margin: 0 0 4px;
+        font:
+          500 32px/1.1 "Fraunces",
+          Georgia,
+          serif;
+      }
+      .game-subtitle {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .timer-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 17px 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+      .timer-card + .timer-card {
+        margin-top: 9px;
+      }
+      .timer-card.active-turn {
+        border-color: #91a586;
+        background: #f5f7ef;
+      }
+      .timer-card.expired {
+        border-color: #ce6960;
+        color: #a83932;
+      }
+      .timer-label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .timer-value {
+        font-size: 25px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+      }
+      .turn-message {
+        min-height: 43px;
+        padding: 14px 0 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .move-heading {
+        margin: 9px 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .move-list {
+        min-height: 94px;
+        max-height: 160px;
+        overflow-y: auto;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        font-size: 13px;
+      }
+      .move-row {
+        display: grid;
+        grid-template-columns: 30px 1fr 1fr;
+        gap: 4px;
+        padding: 5px 0;
+        border-bottom: 1px solid #f0f0eb;
+      }
+      .move-row:last-child {
+        border-bottom: 0;
+      }
+      .move-number {
+        color: #90978e;
+      }
+      .game-actions {
+        display: flex;
+        gap: 9px;
+        margin-top: 17px;
+      }
+      .room-share {
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+      }
+      .room-share[hidden] {
+        display: none;
+      }
+      .room-share-label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .room-share-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .room-share-row strong {
+        font-size: 25px;
+        letter-spacing: 0.16em;
+        font-variant-numeric: tabular-nums;
+      }
+      .room-share-row .secondary-button {
+        min-height: 35px;
+      }
+      .room-connection-status {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .secondary-button {
+        min-height: 43px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: transparent;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .secondary-button:hover {
+        background: #eeefe8;
+      }
+      .secondary-button.primary {
+        flex: 1;
+        border-color: var(--green);
+        background: var(--green);
+        color: #fff;
+      }
+      .secondary-button.primary:hover {
+        background: var(--green-dark);
+      }
+      .game-over {
+        position: fixed;
+        z-index: 5;
+        display: none;
+        inset: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: #18251dcc;
+      }
+      .game-over.show {
+        display: flex;
+        animation: appear 0.22s ease both;
+      }
+      .result-panel {
+        width: min(390px, 100%);
+        padding: 35px;
+        border-radius: 10px;
+        background: var(--paper);
+        text-align: center;
+        box-shadow: 0 20px 70px #0004;
+      }
+      .result-panel .result-icon {
+        font-size: 35px;
+      }
+      .result-panel h2 {
+        margin: 10px 0 7px;
+        font:
+          500 43px/1.1 "Fraunces",
+          Georgia,
+          serif;
+      }
+      .result-panel p {
+        margin: 0 0 23px;
+        color: var(--muted);
+      }
+      .result-panel .primary-button {
+        width: 100%;
+      }
+      .thinking .player-status {
+        color: var(--green);
+      }
+
+      @keyframes appear {
+        from {
+          transform: translateY(10px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .game-header {
+          height: 60px;
+        }
+        .game-layout {
+          max-width: 570px;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 20px;
+          padding: 20px 16px 30px;
+        }
+        .side-panel {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 9px;
+        }
+        .game-title,
+        .game-subtitle,
+        .turn-message,
+        .move-heading,
+        .move-list,
+        .game-actions {
+          grid-column: 1 / -1;
+        }
+        .game-subtitle {
+          margin-bottom: 6px;
+        }
+        .timer-card,
+        .timer-card + .timer-card {
+          margin: 0;
+          padding: 12px;
+        }
+        .timer-value {
+          font-size: 21px;
+        }
+        .turn-message {
+          min-height: 27px;
+          padding: 3px 0;
+        }
+        .move-heading {
+          margin: 4px 0 -4px;
+        }
+        .move-list {
+          min-height: 54px;
+          max-height: 100px;
+        }
+        .game-actions {
+          margin-top: 3px;
+        }
+        .room-share {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .game-layout {
+          padding-inline: 10px;
+        }
+        .chessboard {
+          border-width: 3px;
+        }
+        .square.legal.capture::after {
+          border-width: 3px;
+        }
+        .player-bar {
+          min-height: 47px;
+        }
+        .welcome-screen {
+          padding: 22px;
+        }
+        .welcome-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .welcome-actions .primary-button,
+        .welcome-actions .secondary-button {
+          width: 100%;
+        }
+      }
+    </style>
+    <script
+      defer
+      src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"
+    ></script>
+  </head>
+  <body>
+    <main>
+      <section
+        class="screen welcome-screen active"
+        id="welcome-screen"
+        aria-labelledby="welcome-title"
+      >
+        <div class="welcome-content">
+          <div class="brand-mark">
+            <span aria-hidden="true">♞</span> The quiet game
+          </div>
+          <h1 id="welcome-title">Welcome to chess</h1>
+          <p>
+            A little patience, a little courage, and one good move at a time.
+          </p>
+          <div class="welcome-actions">
+            <button class="primary-button" id="start-button">
+              Play AI <span aria-hidden="true">→</span>
+            </button>
+            <button class="secondary-button" id="friend-mode-button">
+              Play friend
+            </button>
+          </div>
+          <span class="welcome-note"
+            >A thoughtful match, whenever you are ready.</span
+          >
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-menu-screen"
+        aria-labelledby="friend-menu-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-menu-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-menu-title">Play a friend</h1>
+          <p>Meet in a private room and take turns on the same board.</p>
+          <div class="friend-menu-actions">
+            <button class="primary-button" id="friend-create-menu-button">
+              Create
+            </button>
+            <button class="secondary-button" id="friend-join-menu-button">
+              Join
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-create-screen"
+        aria-labelledby="friend-create-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-create-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-create-title">Create a room</h1>
+          <p>You’ll play White. Choose the clock, then share your room code.</p>
+          <div class="field">
+            <label>Time per player</label>
+            <div
+              class="choice-row"
+              role="group"
+              aria-label="Choose friend game clock"
+            >
+              <button class="choice" data-friend-minutes="5">5 min</button>
+              <button class="choice selected" data-friend-minutes="10">
+                10 min
+              </button>
+              <button class="choice" data-friend-minutes="15">15 min</button>
+            </div>
+          </div>
+          <button class="primary-button setup-play" id="create-room-button">
+            Create room <span aria-hidden="true">→</span>
+          </button>
+          <p class="room-error" id="create-room-error" role="alert"></p>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="friend-join-screen"
+        aria-labelledby="friend-join-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="friend-join-back">
+            ← &nbsp; Back
+          </button>
+          <h1 id="friend-join-title">Join a room</h1>
+          <p>Enter the four-digit code from your friend.</p>
+          <div class="field">
+            <label for="room-code-input">Room code</label>
+            <input
+              id="room-code-input"
+              class="room-code-input"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              placeholder="0000"
+            />
+          </div>
+          <button class="primary-button setup-play" id="join-room-button">
+            Join room <span aria-hidden="true">→</span>
+          </button>
+          <p class="room-error" id="join-room-error" role="alert"></p>
+        </div>
+      </section>
+
+      <section
+        class="screen setup-screen"
+        id="setup-screen"
+        aria-labelledby="setup-title"
+      >
+        <div class="setup-panel">
+          <button class="back-button" id="welcome-back">← &nbsp; Back</button>
+          <h1 id="setup-title">Set the board</h1>
+          <p>Choose your opponent and settle on a clock.</p>
+          <div class="field">
+            <label>Difficulty</label>
+            <div
+              class="choice-row"
+              id="difficulty-options"
+              role="group"
+              aria-label="Choose difficulty"
+            >
+              <button class="choice" data-difficulty="easy">
+                Easy<small>Relaxed</small>
+              </button>
+              <button class="choice selected" data-difficulty="medium">
+                Medium<small>Balanced</small>
+              </button>
+              <button class="choice" data-difficulty="hard">
+                Hard<small>Sharper</small>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Your color</label>
+            <div
+              class="choice-row"
+              id="color-options"
+              role="group"
+              aria-label="Choose your color"
+            >
+              <button
+                class="choice selected"
+                data-color="white"
+                aria-pressed="true"
+              >
+                White
+              </button>
+              <button class="choice" data-color="black" aria-pressed="false">
+                Black
+              </button>
+              <button class="choice" data-color="random" aria-pressed="false">
+                Random
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Time per player</label>
+            <div
+              class="choice-row"
+              id="time-options"
+              role="group"
+              aria-label="Choose time per player"
+            >
+              <button class="choice" data-minutes="5">5 min</button>
+              <button class="choice selected" data-minutes="10">10 min</button>
+              <button class="choice" data-minutes="15">15 min</button>
+            </div>
+          </div>
+          <button class="primary-button setup-play" id="play-button">
+            Play chess <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="screen game-screen"
+        id="game-screen"
+        aria-label="Chess game"
+      >
+        <header class="game-header">
+          <div class="brand-mark">
+            <span aria-hidden="true">♞</span> The quiet game
+          </div>
+          <button class="back-button" id="new-game-header">
+            New game &nbsp; ↗
+          </button>
+        </header>
+        <div class="game-layout">
+          <div class="board-column">
+            <div class="player-bar" id="ai-player-bar">
+              <div class="player-ident">
+                <span class="player-dot dark" id="opponent-dot"></span>
+                <span id="opponent-name-top">Chess AI</span>
+              </div>
+              <span class="player-status" id="ai-status">Waiting</span>
+            </div>
+            <div
+              class="chessboard"
+              id="chessboard"
+              role="grid"
+              aria-label="Chess board"
+            ></div>
+            <div class="player-bar">
+              <div class="player-ident">
+                <span class="player-dot"></span> You
+              </div>
+              <span class="player-status" id="you-status"
+                >White · Your turn</span
+              >
+            </div>
+          </div>
+          <aside class="side-panel" aria-label="Game information">
+            <h1 class="game-title">Your match</h1>
+            <p class="game-subtitle" id="match-description">
+              Medium · 10 minutes each
+            </p>
+            <div class="timer-card" id="ai-timer-card">
+              <span class="timer-label" id="opponent-label">Chess AI</span
+              ><span class="timer-value" id="ai-timer">10:00</span>
+            </div>
+            <div class="timer-card active-turn" id="you-timer-card">
+              <span class="timer-label">You</span
+              ><span class="timer-value" id="you-timer">10:00</span>
+            </div>
+            <div class="turn-message" id="turn-message" aria-live="polite">
+              Your move. Take your time.
+            </div>
+            <div class="move-heading">Moves</div>
+            <div class="move-list" id="move-list" aria-live="polite">
+              Your game starts here.
+            </div>
+            <div class="game-actions">
+              <button class="secondary-button primary" id="restart-button">
+                Restart
+              </button>
+              <button class="secondary-button" id="resign-button">
+                Resign
+              </button>
+            </div>
+            <div class="room-share" id="room-share" hidden>
+              <span class="room-share-label">Room code</span>
+              <div class="room-share-row">
+                <strong id="room-code-display">0000</strong
+                ><button class="secondary-button" id="copy-room-code">
+                  Copy
+                </button>
+              </div>
+              <span
+                class="room-connection-status"
+                id="room-connection-status"
+                aria-live="polite"
+                >Waiting for a friend to join…</span
+              >
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div
+      class="game-over"
+      id="game-over"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="result-title"
+    >
+      <div class="result-panel">
+        <div class="result-icon" aria-hidden="true" id="result-icon">♔</div>
+        <h2 id="result-title">You win</h2>
+        <p id="result-detail">Well played.</p>
+        <button class="primary-button" id="result-new-game">Play again</button>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+      (() => {
+        const screens = [...document.querySelectorAll(".screen")];
+        const boardElement = document.getElementById("chessboard");
+        const files = "abcdefgh";
+        const glyphs = {
+          wk: "♔",
+          wq: "♕",
+          wr: "♖",
+          wb: "♗",
+          wn: "♘",
+          wp: "♙",
+          bk: "♚",
+          bq: "♛",
+          br: "♜",
+          bb: "♝",
+          bn: "♞",
+          bp: "♟",
+        };
+        const values = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 };
+        const searchDepths = { easy: 1, medium: 2, hard: 3 };
+        let difficulty = "medium";
+        let minutes = 10;
+        let colorChoice = "white";
+        let friendMinutes = 10;
+        let gameMode = "ai";
+        let isRoomHost = false;
+        let peer;
+        let roomConnection;
+        let pendingRoomMove = false;
+        let playerColor = "w";
+        let aiColor = "b";
+        let game;
+        let selectedSquare = null;
+        let legalTargets = [];
+        let lastMove = null;
+        let aiThinking = false;
+        let clocks = { w: 600, b: 600 };
+        let clockActiveColor = "w";
+        let clockLastUpdated = 0;
+        let clockInterval;
+        let aiMoveTimeout;
+
+        function showScreen(id) {
+          screens.forEach((screen) =>
+            screen.classList.toggle("active", screen.id === id),
+          );
+        }
+
+        function formatTime(seconds) {
+          const wholeSeconds = Math.max(0, Math.ceil(seconds));
+          return `${Math.floor(wholeSeconds / 60)}:${String(wholeSeconds % 60).padStart(2, "0")}`;
+        }
+
+        function renderBoard() {
+          boardElement.replaceChildren();
+          const position = game.board();
+          position.forEach((_, rowIndex) => {
+            for (let columnIndex = 0; columnIndex < 8; columnIndex++) {
+              const actualRow = playerColor === "w" ? rowIndex : 7 - rowIndex;
+              const actualColumn =
+                playerColor === "w" ? columnIndex : 7 - columnIndex;
+              const piece = position[actualRow][actualColumn];
+              const squareName = `${files[actualColumn]}${8 - actualRow}`;
+              const square = document.createElement("button");
+              square.className = `square ${(actualRow + actualColumn) % 2 === 0 ? "light" : "dark"}`;
+              square.type = "button";
+              square.dataset.square = squareName;
+              square.setAttribute("role", "gridcell");
+              square.setAttribute(
+                "aria-label",
+                `${squareName}${piece ? ` ${piece.color === "w" ? "white" : "black"} ${piece.type}` : ""}`,
+              );
+              if (selectedSquare === squareName)
+                square.classList.add("selected");
+              if (
+                lastMove &&
+                (lastMove.from === squareName || lastMove.to === squareName)
+              ) {
+                square.classList.add("last-move");
+              }
+              if (legalTargets.some((move) => move.to === squareName)) {
+                square.classList.add("legal");
+                if (piece) square.classList.add("capture");
+              }
+              if (columnIndex === 0) {
+                const rank = document.createElement("span");
+                rank.className = "coord";
+                rank.textContent = String(8 - actualRow);
+                square.append(rank);
+              }
+              if (rowIndex === 7) {
+                const file = document.createElement("span");
+                file.className = "coord file-coordinate";
+                file.textContent = files[actualColumn];
+                square.append(file);
+              }
+              if (piece) {
+                const pieceElement = document.createElement("span");
+                pieceElement.className = `piece ${piece.color === "w" ? "white" : "black"}`;
+                pieceElement.textContent =
+                  glyphs[`${piece.color}${piece.type}`];
+                square.append(pieceElement);
+              }
+              square.addEventListener("click", () =>
+                handleSquareClick(squareName),
+              );
+              boardElement.append(square);
+            }
+          });
+        }
+
+        function updateGameInfo() {
+          const activeColor = game.turn();
+          const activeIsAi = activeColor === aiColor;
+          const opponentName = gameMode === "friend" ? "Friend" : "Chess AI";
+          document.getElementById("opponent-label").textContent = opponentName;
+          document.getElementById("opponent-name-top").textContent =
+            opponentName;
+          document
+            .getElementById("opponent-dot")
+            .classList.toggle("dark", aiColor === "b");
+          document.getElementById("ai-timer").textContent = formatTime(
+            clocks[aiColor],
+          );
+          document.getElementById("you-timer").textContent = formatTime(
+            clocks[playerColor],
+          );
+          document
+            .getElementById("ai-timer-card")
+            .classList.toggle("active-turn", activeIsAi && !game.game_over());
+          document
+            .getElementById("you-timer-card")
+            .classList.toggle("active-turn", !activeIsAi && !game.game_over());
+          document
+            .getElementById("ai-timer-card")
+            .classList.toggle("expired", clocks[aiColor] <= 0);
+          document
+            .getElementById("you-timer-card")
+            .classList.toggle("expired", clocks[playerColor] <= 0);
+          document.getElementById("ai-status").textContent = aiThinking
+            ? "Thinking…"
+            : activeIsAi && !game.game_over()
+              ? "To move"
+              : "Waiting";
+          document
+            .getElementById("ai-player-bar")
+            .classList.toggle("thinking", aiThinking);
+          const playerName = playerColor === "w" ? "White" : "Black";
+          document.getElementById("you-status").textContent =
+            !activeIsAi && !game.game_over()
+              ? `${playerName} · Your turn`
+              : playerName;
+          document.getElementById("turn-message").textContent = aiThinking
+            ? "The AI is considering its move…"
+            : activeIsAi
+              ? gameMode === "friend"
+                ? "Your friend is to move."
+                : "The AI is to move."
+              : "Your move. Take your time.";
+
+          const history = game.history();
+          const rows = [];
+          for (let index = 0; index < history.length; index += 2) {
+            rows.push(
+              `<div class="move-row"><span class="move-number">${Math.floor(index / 2) + 1}.</span><span>${history[index]}</span><span>${history[index + 1] || ""}</span></div>`,
+            );
+          }
+          const moveList = document.getElementById("move-list");
+          moveList.innerHTML = rows.length
+            ? rows.join("")
+            : "Your game starts here.";
+          moveList.scrollTop = moveList.scrollHeight;
+        }
+
+        function handleSquareClick(square) {
+          if (
+            !game ||
+            game.game_over() ||
+            aiThinking ||
+            pendingRoomMove ||
+            game.turn() !== playerColor
+          )
+            return;
+          const piece = game.get(square);
+          if (
+            selectedSquare &&
+            legalTargets.some((move) => move.to === square)
+          ) {
+            if (gameMode === "friend" && !isRoomHost) {
+              roomConnection.send({
+                type: "move",
+                move: { from: selectedSquare, to: square, promotion: "q" },
+              });
+              selectedSquare = null;
+              legalTargets = [];
+              pendingRoomMove = true;
+              document.getElementById("turn-message").textContent =
+                "Move sent. Waiting for confirmation…";
+              renderBoard();
+              return;
+            }
+            const move = game.move({
+              from: selectedSquare,
+              to: square,
+              promotion: "q",
+            });
+            selectedSquare = null;
+            legalTargets = [];
+            if (move) {
+              lastMove = move;
+              afterMove();
+            }
+            return;
+          }
+          if (piece && piece.color === playerColor) {
+            selectedSquare = square;
+            legalTargets = game.moves({ square, verbose: true });
+          } else {
+            selectedSquare = null;
+            legalTargets = [];
+          }
+          renderBoard();
+        }
+
+        function syncClock() {
+          if (!game || game.game_over()) return true;
+          const now = Date.now();
+          clocks[clockActiveColor] -= (now - clockLastUpdated) / 1000;
+          clockLastUpdated = now;
+          if (clocks[clockActiveColor] <= 0) {
+            finishGame();
+            return false;
+          }
+          return true;
+        }
+
+        function evaluateBoard(position) {
+          let score = 0;
+          const board = position.board();
+          board.forEach((row, rowIndex) =>
+            row.forEach((piece, columnIndex) => {
+              if (!piece) return;
+              const direction = piece.color === "w" ? 1 : -1;
+              const centerDistance =
+                Math.abs(3.5 - columnIndex) + Math.abs(3.5 - rowIndex);
+              let positional = 0;
+              if (piece.type === "p") {
+                const advancement =
+                  piece.color === "w" ? 6 - rowIndex : rowIndex - 1;
+                positional =
+                  advancement * 7 + (3.5 - Math.abs(3.5 - columnIndex)) * 3;
+              }
+              if (piece.type === "n" || piece.type === "b") {
+                positional =
+                  (7 - centerDistance) * (piece.type === "n" ? 7 : 4);
+              }
+              if (piece.type === "q") positional = (7 - centerDistance) * 2;
+              if (piece.type === "k" && position.history().length > 20) {
+                positional = (7 - centerDistance) * 3;
+              }
+              score += direction * (values[piece.type] + positional);
+            }),
+          );
+          return (position.turn() === "w" ? 1 : -1) * score;
+        }
+
+        function moveOrderScore(move) {
+          if (move.captured)
+            return 10 * values[move.captured] - values[move.piece];
+          if (move.promotion) return values[move.promotion];
+          return 0;
+        }
+
+        function search(position, depth, alpha, beta, ply, counter) {
+          counter.nodes++;
+          if (position.in_checkmate()) return -100000 + ply;
+          if (position.in_draw() || position.in_stalemate()) return 0;
+          if (depth === 0) return evaluateBoard(position);
+          const moves = position
+            .moves({ verbose: true })
+            .sort((a, b) => moveOrderScore(b) - moveOrderScore(a));
+          let best = -Infinity;
+          for (const move of moves) {
+            position.move(move);
+            const score = -search(
+              position,
+              depth - 1,
+              -beta,
+              -alpha,
+              ply + 1,
+              counter,
+            );
+            position.undo();
+            if (score > best) best = score;
+            if (score > alpha) alpha = score;
+            if (alpha >= beta) break;
+          }
+          return best;
+        }
+
+        function chooseAiMove() {
+          const candidates = game
+            .moves({ verbose: true })
+            .sort((a, b) => moveOrderScore(b) - moveOrderScore(a));
+          const depth = searchDepths[difficulty];
+          const counter = { nodes: 0 };
+          let bestScore = -Infinity;
+          let bestMoves = [];
+          for (const move of candidates) {
+            game.move(move);
+            const score = -search(
+              game,
+              depth - 1,
+              -Infinity,
+              Infinity,
+              1,
+              counter,
+            );
+            game.undo();
+            if (score > bestScore) {
+              bestScore = score;
+              bestMoves = [move];
+            } else if (score === bestScore) {
+              bestMoves.push(move);
+            }
+          }
+          const chosen =
+            bestMoves[Math.floor(Math.random() * bestMoves.length)] ||
+            candidates[0];
+          const delay = Math.min(
+            2100,
+            280 +
+              depth * 100 +
+              Math.sqrt(counter.nodes) * (difficulty === "easy" ? 5 : 15),
+          );
+          return { chosen, delay };
+        }
+
+        function scheduleAiMove() {
+          if (gameMode !== "ai") return;
+          if (game.game_over() || game.turn() !== aiColor) return;
+          aiThinking = true;
+          updateGameInfo();
+          const { chosen, delay } = chooseAiMove();
+          aiMoveTimeout = window.setTimeout(() => {
+            if (!game || game.game_over() || !syncClock()) return;
+            const move = game.move({
+              from: chosen.from,
+              to: chosen.to,
+              promotion: chosen.promotion || "q",
+            });
+            aiThinking = false;
+            lastMove = move;
+            afterMove();
+          }, delay);
+        }
+
+        function afterMove() {
+          if (!syncClock()) return;
+          clockActiveColor = game.turn();
+          clockLastUpdated = Date.now();
+          renderBoard();
+          updateGameInfo();
+          if (game.game_over()) {
+            finishGame();
+            return;
+          }
+          if (gameMode === "friend") {
+            if (isRoomHost) sendRoomState("state");
+            return;
+          }
+          if (game.turn() === aiColor) scheduleAiMove();
+        }
+
+        function finishGame(message, detailOverride, broadcast = true) {
+          clearInterval(clockInterval);
+          clearTimeout(aiMoveTimeout);
+          aiThinking = false;
+          let title = message;
+          let detail = detailOverride || "Well played.";
+          if (!title && game.in_checkmate()) {
+            title =
+              game.turn() === playerColor
+                ? gameMode === "friend"
+                  ? "Friend wins"
+                  : "AI wins"
+                : "You win";
+            detail =
+              game.turn() === playerColor
+                ? "Checkmate. There is always another game."
+                : "Checkmate. A lovely finish.";
+          } else if (!title && clocks[playerColor] <= 0) {
+            title = gameMode === "friend" ? "Friend wins" : "AI wins";
+            detail = "Your time ran out.";
+          } else if (!title && clocks[aiColor] <= 0) {
+            title = "You win";
+            detail =
+              gameMode === "friend"
+                ? "Your friend ran out of time."
+                : "The AI ran out of time.";
+          } else if (!title) {
+            title = "Draw";
+            detail = "A hard-fought game, evenly met.";
+          }
+          document.getElementById("result-title").textContent = title;
+          document.getElementById("result-detail").textContent = detail;
+          document.getElementById("result-icon").textContent =
+            title === "You win"
+              ? "♔"
+              : title === "AI wins" || title === "Friend wins"
+                ? "♚"
+                : "½";
+          document.getElementById("game-over").classList.add("show");
+          updateGameInfo();
+          if (
+            gameMode === "friend" &&
+            isRoomHost &&
+            broadcast &&
+            roomConnection?.open
+          ) {
+            const winnerColor = game.in_checkmate()
+              ? game.turn() === "w"
+                ? "b"
+                : "w"
+              : clocks[playerColor] <= 0
+                ? aiColor
+                : clocks[aiColor] <= 0
+                  ? playerColor
+                  : title === "You win"
+                    ? playerColor
+                    : title === "Friend wins"
+                      ? aiColor
+                      : null;
+            sendRoomState("state");
+            roomConnection.send({
+              type: "finished",
+              title,
+              detail,
+              winnerColor,
+            });
+          }
+        }
+
+        function setRoomStatus(message) {
+          document.getElementById("room-connection-status").textContent =
+            message;
+        }
+
+        function showRoomError(elementId, message) {
+          document.getElementById(elementId).textContent = message;
+        }
+
+        function createRoomCode() {
+          const bytes = new Uint32Array(1);
+          crypto.getRandomValues(bytes);
+          return String(1000 + (bytes[0] % 9000));
+        }
+
+        function prepareFriendGame(host, code) {
+          gameMode = "friend";
+          isRoomHost = host;
+          playerColor = host ? "w" : "b";
+          aiColor = host ? "b" : "w";
+          game = new Chess();
+          selectedSquare = null;
+          legalTargets = [];
+          lastMove = null;
+          pendingRoomMove = false;
+          aiThinking = false;
+          clocks = { w: friendMinutes * 60, b: friendMinutes * 60 };
+          clockActiveColor = "w";
+          clockLastUpdated = Date.now();
+          document.getElementById("game-over").classList.remove("show");
+          document.getElementById("opponent-label").textContent = "Friend";
+          document.getElementById("opponent-name-top").textContent = "Friend";
+          document.getElementById("match-description").textContent = host
+            ? `${friendMinutes} minutes each · You play White`
+            : "Friend game · You play Black";
+          document.getElementById("room-share").hidden = false;
+          document.getElementById("room-code-display").textContent = code;
+          setRoomStatus(
+            host ? "Opening your room…" : "Connecting to your friend…",
+          );
+          renderBoard();
+          updateGameInfo();
+          showScreen("game-screen");
+        }
+
+        function roomSnapshot() {
+          return {
+            fen: game.fen(),
+            moves: game.history({ verbose: true }).map((move) => ({
+              from: move.from,
+              to: move.to,
+              promotion: move.promotion,
+            })),
+            clocks: { ...clocks },
+            clockActiveColor,
+            minutes: friendMinutes,
+          };
+        }
+
+        function sendRoomState(type = "state") {
+          if (!roomConnection?.open) return;
+          roomConnection.send({ type, state: roomSnapshot() });
+        }
+
+        function applyRoomState(state) {
+          const synchronizedGame = new Chess();
+          state.moves.forEach((move) => synchronizedGame.move(move));
+          game = synchronizedGame;
+          clocks = { ...state.clocks };
+          clockActiveColor = state.clockActiveColor;
+          clockLastUpdated = Date.now();
+          friendMinutes = state.minutes;
+          pendingRoomMove = false;
+          lastMove = game.history({ verbose: true }).slice(-1)[0] || null;
+          document.getElementById("match-description").textContent =
+            `${friendMinutes} minutes each · You play ${playerColor === "w" ? "White" : "Black"}`;
+          setRoomStatus("Connected · playing now");
+          renderBoard();
+          updateGameInfo();
+        }
+
+        function startRoomClock() {
+          clearInterval(clockInterval);
+          clockLastUpdated = Date.now();
+          clockInterval = window.setInterval(() => {
+            if (!isRoomHost || !game || game.game_over()) return;
+            if (!syncClock()) return;
+            updateGameInfo();
+            sendRoomState("state");
+          }, 1000);
+        }
+
+        function restartFriendGame() {
+          game = new Chess();
+          clocks = { w: friendMinutes * 60, b: friendMinutes * 60 };
+          clockActiveColor = "w";
+          clockLastUpdated = Date.now();
+          lastMove = null;
+          selectedSquare = null;
+          legalTargets = [];
+          pendingRoomMove = false;
+          document.getElementById("game-over").classList.remove("show");
+          startRoomClock();
+          renderBoard();
+          updateGameInfo();
+          sendRoomState("state");
+        }
+
+        function attachRoomConnection(connection, host) {
+          roomConnection = connection;
+          connection.on("open", () => {
+            if (host) {
+              setRoomStatus("Friend joined · you are White");
+              clockActiveColor = game.turn();
+              startRoomClock();
+              sendRoomState("start");
+            } else {
+              setRoomStatus("Connected · waiting for the host");
+            }
+          });
+          connection.on("data", (message) => {
+            if (!message || typeof message !== "object") return;
+            if (
+              host &&
+              message.type === "move" &&
+              message.move &&
+              game.turn() === "b"
+            ) {
+              const move = game.move(message.move);
+              if (move) {
+                lastMove = move;
+                afterMove();
+              }
+            } else if (host && message.type === "resign") {
+              finishGame("You win", "Your friend resigned.");
+            } else if (host && message.type === "opponent-left") {
+              finishGame("You win", "Your friend disconnected.");
+            } else if (host && message.type === "restart") {
+              restartFriendGame();
+            } else if (
+              !host &&
+              (message.type === "start" || message.type === "state")
+            ) {
+              applyRoomState(message.state);
+              if (message.type === "start") startRoomClock();
+            } else if (!host && message.type === "finished") {
+              const remoteTitle = message.winnerColor
+                ? message.winnerColor === playerColor
+                  ? "You win"
+                  : "Friend wins"
+                : message.title;
+              const remoteDetail =
+                message.detail === "Your friend resigned."
+                  ? "You resigned."
+                  : message.detail === "You resigned."
+                    ? "Your friend resigned."
+                    : message.detail;
+              finishGame(remoteTitle, remoteDetail, false);
+            } else if (!host && message.type === "opponent-left") {
+              finishGame(
+                "Friend left",
+                "The other player disconnected.",
+                false,
+              );
+            }
+          });
+          connection.on("close", () => {
+            if (host && gameMode === "friend" && game && !game.game_over()) {
+              finishGame("You win", "Your friend disconnected.", false);
+            } else {
+              setRoomStatus("Connection closed");
+            }
+          });
+          connection.on("error", () =>
+            setRoomStatus("Connection problem · check the room code"),
+          );
+        }
+
+        function createFriendRoom() {
+          showRoomError("create-room-error", "");
+          if (typeof Peer === "undefined") {
+            showRoomError(
+              "create-room-error",
+              "Room connections could not load. Check your internet connection and try again.",
+            );
+            return;
+          }
+          friendMinutes = Number(
+            document.querySelector("[data-friend-minutes].selected").dataset
+              .friendMinutes,
+          );
+          const code = createRoomCode();
+          prepareFriendGame(true, code);
+
+          function openPeer(roomCode, attempt = 0) {
+            peer = new Peer(roomCode);
+            peer.on("open", () =>
+              setRoomStatus("Room ready · waiting for a friend to join"),
+            );
+            peer.on("connection", (connection) => {
+              if (roomConnection) {
+                connection.close();
+                return;
+              }
+              attachRoomConnection(connection, true);
+            });
+            peer.on("error", (error) => {
+              if (error.type === "unavailable-id" && attempt < 8) {
+                peer.destroy();
+                const nextCode = createRoomCode();
+                document.getElementById("room-code-display").textContent =
+                  nextCode;
+                openPeer(nextCode, attempt + 1);
+              } else {
+                setRoomStatus("Could not create the room · try again");
+              }
+            });
+          }
+          openPeer(code);
+        }
+
+        function joinFriendRoom() {
+          showRoomError("join-room-error", "");
+          const code = document.getElementById("room-code-input").value.trim();
+          if (!/^\d{4}$/.test(code)) {
+            showRoomError("join-room-error", "Enter the four-digit room code.");
+            return;
+          }
+          if (typeof Peer === "undefined") {
+            showRoomError(
+              "join-room-error",
+              "Room connections could not load. Check your internet connection and try again.",
+            );
+            return;
+          }
+          prepareFriendGame(false, code);
+          peer = new Peer();
+          peer.on("open", () => {
+            const connection = peer.connect(code, { reliable: true });
+            attachRoomConnection(connection, false);
+            connection.on("open", () =>
+              setRoomStatus("Connected · waiting for the host"),
+            );
+            window.setTimeout(() => {
+              if (!connection.open) {
+                showRoomError(
+                  "join-room-error",
+                  "Could not reach that room. Check the code and try again.",
+                );
+                setRoomStatus("Still waiting · check the code or network");
+              }
+            }, 10000);
+          });
+          peer.on("error", (error) => {
+            showRoomError(
+              "join-room-error",
+              error.type === "peer-unavailable"
+                ? "No room found with that code. Check it with your friend."
+                : "Could not connect. Check your internet connection and try again.",
+            );
+            setRoomStatus("Connection failed");
+          });
+        }
+
+        function cleanupRoom() {
+          clearInterval(clockInterval);
+          clearTimeout(aiMoveTimeout);
+          gameMode = "none";
+          if (roomConnection?.open)
+            roomConnection.send({ type: "opponent-left" });
+          roomConnection?.close();
+          peer?.destroy();
+          peer = null;
+          roomConnection = null;
+          pendingRoomMove = false;
+          document.getElementById("room-share").hidden = true;
+        }
+
+        function startGame() {
+          if (typeof Chess === "undefined") {
+            alert(
+              "The chess rules library could not load. Check your internet connection and reload the page.",
+            );
+            return;
+          }
+          cleanupRoom();
+          gameMode = "ai";
+          clearInterval(clockInterval);
+          clearTimeout(aiMoveTimeout);
+          playerColor =
+            colorChoice === "random"
+              ? Math.random() < 0.5
+                ? "w"
+                : "b"
+              : colorChoice === "white"
+                ? "w"
+                : "b";
+          aiColor = playerColor === "w" ? "b" : "w";
+          game = new Chess();
+          selectedSquare = null;
+          legalTargets = [];
+          lastMove = null;
+          aiThinking = false;
+          clocks = { w: minutes * 60, b: minutes * 60 };
+          clockActiveColor = game.turn();
+          clockLastUpdated = Date.now();
+          document.getElementById("game-over").classList.remove("show");
+          const playerName = playerColor === "w" ? "White" : "Black";
+          document.getElementById("match-description").textContent =
+            `${difficulty[0].toUpperCase()}${difficulty.slice(1)} · ${minutes} minutes each · You play ${playerName}`;
+          renderBoard();
+          updateGameInfo();
+          clockInterval = window.setInterval(() => {
+            if (!syncClock()) return;
+            updateGameInfo();
+          }, 1000);
+          showScreen("game-screen");
+          if (game.turn() === aiColor) scheduleAiMove();
+        }
+
+        document
+          .getElementById("start-button")
+          .addEventListener("click", () => showScreen("setup-screen"));
+        document
+          .getElementById("friend-mode-button")
+          .addEventListener("click", () => showScreen("friend-menu-screen"));
+        document
+          .getElementById("friend-menu-back")
+          .addEventListener("click", () => showScreen("welcome-screen"));
+        document
+          .getElementById("friend-create-menu-button")
+          .addEventListener("click", () => showScreen("friend-create-screen"));
+        document
+          .getElementById("friend-join-menu-button")
+          .addEventListener("click", () => showScreen("friend-join-screen"));
+        document
+          .getElementById("friend-create-back")
+          .addEventListener("click", () => showScreen("friend-menu-screen"));
+        document
+          .getElementById("friend-join-back")
+          .addEventListener("click", () => showScreen("friend-menu-screen"));
+        document
+          .getElementById("create-room-button")
+          .addEventListener("click", createFriendRoom);
+        document
+          .getElementById("join-room-button")
+          .addEventListener("click", joinFriendRoom);
+        document
+          .getElementById("room-code-input")
+          .addEventListener("input", (event) => {
+            event.target.value = event.target.value
+              .replace(/\D/g, "")
+              .slice(0, 4);
+          });
+        document
+          .getElementById("copy-room-code")
+          .addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(
+                document.getElementById("room-code-display").textContent,
+              );
+              document.getElementById("copy-room-code").textContent = "Copied";
+            } catch {
+              setRoomStatus("Select and copy the code to share it");
+            }
+          });
+        document
+          .getElementById("welcome-back")
+          .addEventListener("click", () => showScreen("welcome-screen"));
+        document
+          .getElementById("play-button")
+          .addEventListener("click", startGame);
+        document
+          .getElementById("new-game-header")
+          .addEventListener("click", () => {
+            const wasFriendGame = gameMode === "friend";
+            cleanupRoom();
+            document.getElementById("game-over").classList.remove("show");
+            showScreen(wasFriendGame ? "friend-menu-screen" : "setup-screen");
+          });
+        document
+          .getElementById("restart-button")
+          .addEventListener("click", () => {
+            if (gameMode !== "friend") {
+              startGame();
+            } else if (isRoomHost) {
+              restartFriendGame();
+            } else {
+              roomConnection?.send({ type: "restart" });
+              setRoomStatus("Restart requested from the room leader");
+            }
+          });
+        document
+          .getElementById("resign-button")
+          .addEventListener("click", () => {
+            if (gameMode === "friend" && !isRoomHost) {
+              roomConnection?.send({ type: "resign" });
+              finishGame("You resigned", "Your friend wins.", false);
+            } else if (gameMode === "friend") {
+              finishGame("Friend wins", "You resigned.");
+            } else {
+              finishGame("AI wins");
+            }
+          });
+        document
+          .getElementById("result-new-game")
+          .addEventListener("click", () => {
+            const wasFriendGame = gameMode === "friend";
+            if (wasFriendGame) {
+              cleanupRoom();
+              showScreen("friend-menu-screen");
+            } else {
+              startGame();
+            }
+          });
+
+        document.querySelectorAll("[data-difficulty]").forEach((button) => {
+          button.addEventListener("click", () => {
+            difficulty = button.dataset.difficulty;
+            document.querySelectorAll("[data-difficulty]").forEach((option) => {
+              option.classList.toggle("selected", option === button);
+            });
+          });
+        });
+        document.querySelectorAll("[data-minutes]").forEach((button) => {
+          button.addEventListener("click", () => {
+            minutes = Number(button.dataset.minutes);
+            document.querySelectorAll("[data-minutes]").forEach((option) => {
+              option.classList.toggle("selected", option === button);
+            });
+          });
+        });
+        document.querySelectorAll("[data-color]").forEach((button) => {
+          button.addEventListener("click", () => {
+            colorChoice = button.dataset.color;
+            document.querySelectorAll("[data-color]").forEach((option) => {
+              option.classList.toggle("selected", option === button);
+              option.setAttribute("aria-pressed", String(option === button));
+            });
+          });
+        });
+        document.querySelectorAll("[data-friend-minutes]").forEach((button) => {
+          button.addEventListener("click", () => {
+            friendMinutes = Number(button.dataset.friendMinutes);
+            document
+              .querySelectorAll("[data-friend-minutes]")
+              .forEach((option) => {
+                option.classList.toggle("selected", option === button);
+              });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
+```
